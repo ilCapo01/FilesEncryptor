@@ -7,6 +7,7 @@ import java.util.Scanner;
 
 import javax.crypto.SecretKey;
 
+//https://www.codejava.net/coding/file-encryption-and-decryption-simple-example
 public class Main {
 	
 	public Main() throws NoSuchAlgorithmException, IOException {
@@ -21,6 +22,7 @@ public class Main {
 		case "keygen":
 			iv = aes.generateIV();
 			aes.writeKeyToFile(iv, "iv.dat");
+			System.out.println("[SUCCESS]You have been generated a new InitVector.");
 			break;
 		case "encrypt":
 			System.out.println("Key to encrypt: "); 
@@ -32,6 +34,7 @@ public class Main {
 			
 			inputFile = new File(filename);
 			aes.encrypt(key, iv, inputFile, new File(filename+".dat"));
+			System.out.println("[SUCCESS]Your file has been encrypted.");
 			inputFile.delete();
 			break;
 		case "decrypt":
@@ -44,12 +47,13 @@ public class Main {
 			
 			inputFile = new File(filename);
 			aes.decrypt(key, iv, new File(filename), new File(filename.replace(".dat", "")));
+			System.out.println("[SUCCESS]Your file has been decrypted.");
 			inputFile.delete();
 			break;
 		case "encryptfolder":
 			System.out.println("Key to encrypt: "); 
 			key = aes.generateKey(scan.next());
-			System.out.println("Path to directory: "); 
+			System.out.println("Path to folder to encrypt all files: "); 
 			path = scan.next();
 			
 			iv = aes.readKeyFromFile("iv.dat");
@@ -59,7 +63,7 @@ public class Main {
 		case "decryptfolder":
 			System.out.println("Key to decrypt: "); 
 			key = aes.generateKey(scan.next());
-			System.out.println("Path to directory: "); 
+			System.out.println("Path to folder to decrypt all files: "); 
 			path = scan.next();
 			
 			iv = aes.readKeyFromFile("iv.dat");
@@ -73,6 +77,7 @@ public class Main {
 	}
 	
 	public void encryptFiles(String dirPath, SecretKey key, SecretKey iv, AES aes) {
+		//File[] listOfFiles = getFilesInDirectory(dirPath);
 		DirectoriesCrawler crawler = new DirectoriesCrawler(dirPath);
 		crawler.scanDirectories();
 		File[] listOfFiles = crawler.getAllFiles();
@@ -87,6 +92,7 @@ public class Main {
 	}
 	
 	public void decryptFiles(String dirPath, SecretKey key, SecretKey iv, AES aes) {
+		//File[] listOfFiles = getFilesInDirectory(dirPath);
 		DirectoriesCrawler crawler = new DirectoriesCrawler(dirPath);
 		crawler.scanDirectories();
 		File[] listOfFiles = crawler.getAllFiles();
@@ -94,6 +100,8 @@ public class Main {
 		for (int i = 0; i < listOfFiles.length; i++) {
 			File inputFile = listOfFiles[i];
 			aes.decrypt(key, iv, inputFile, new File(inputFile.getPath().replace(".dat", "")));
+			if (aes.badDecryptionKey == true) 
+				return;
 			inputFile.delete();
 		}
 	}
