@@ -98,10 +98,10 @@ public class Main {
 		
 		for (int i = 0; i < listOfFiles.length; i++) {
 			File inputFile = listOfFiles[i];
-			System.out.println("Decrypting: "+inputFile);
 			aes.decrypt(key, iv, inputFile, new File(inputFile.getPath().replace(".dat", "")));
 			if (aes.badDecryptionKey == true) 
 				return;
+			System.out.println("Decrypting: "+inputFile);
 			inputFile.delete();
 		}
 	}
