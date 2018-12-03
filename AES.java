@@ -23,7 +23,8 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class AES {
-    public boolean badDecryptionKey = false;
+    
+    private boolean badDecryptionKey = false;
 	
 	public void encrypt(SecretKey key, SecretKey initVector, File inputFile, File outputFile) {
         doCrypto(Cipher.ENCRYPT_MODE, key, initVector, inputFile, outputFile);
@@ -57,6 +58,10 @@ public class AES {
 			System.err.print("A bad key is used during decryption");
 			badDecryptionKey = true;
 		}
+    }
+    
+    public boolean isDecryptionKeyBad() {
+    	return badDecryptionKey;
     }
     
     public SecretKey generateIV() throws NoSuchAlgorithmException {
