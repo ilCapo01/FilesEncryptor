@@ -1,120 +1,172 @@
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
-public class AES {
-    
-    private boolean badDecryptionKey = false;
+/*
+ * Coded By Bar771.
+ */
+public class Main {
 	
-	public void encrypt(SecretKey key, SecretKey initVector, File inputFile, File outputFile) {
-        doCrypto(Cipher.ENCRYPT_MODE, key, initVector, inputFile, outputFile);
-    }
- 
-    public void decrypt(SecretKey key, SecretKey initVector, File inputFile, File outputFile) {
-        doCrypto(Cipher.DECRYPT_MODE, key, initVector, inputFile, outputFile);
-    }
- 
-    private void doCrypto(int cipherMode, SecretKey key, SecretKey initVector, File inputFile, File outputFile) {
-        try {
-        	IvParameterSpec iv = new IvParameterSpec(initVector.getEncoded());
-        	Key secretKey = new SecretKeySpec(key.getEncoded(), "AES");
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-            
-			cipher.init(cipherMode, secretKey, iv);
+	public Main() throws NoSuchAlgorithmException, IOException {
+		AES aes = new AES();
+		SecretKey key = null, iv; 
+		String filename, path;
+		File inputFile;
+		
+		Scanner scan = new Scanner(System.in);
+		System.out.println("Action: "); 
+		switch(scan.next()) {
+		case "keygen":
+			iv = aes.generateIV();
+			aes.writeKeyToFile(iv, "iv.dat");
+			System.out.println("[SUCCESS]You have been generated a new InitVector.");
+			break;
+		case "encrypt":
+			System.out.println("Key to encrypt: "); 
+			key = aes.generateKey(scan.next());
+			System.out.println("Filename to encrypt: "); 
+			filename = scan.next();
 			
-			FileInputStream inputStream = new FileInputStream(inputFile);
-	        byte[] inputBytes = new byte[(int) inputFile.length()];
-	        inputStream.read(inputBytes);
-	         
-	        byte[] outputBytes = cipher.doFinal(inputBytes);
-	         
-	        FileOutputStream outputStream = new FileOutputStream(outputFile);
-	        outputStream.write(outputBytes);
-	         
-	        inputStream.close();
-	        outputStream.close();
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IOException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e) {
-			//e.printStackTrace();
-			System.err.print("A bad key is used during decryption");
-			badDecryptionKey = true;
-		}
-    }
-    
-    public boolean isDecryptionKeyBad() {
-    	return badDecryptionKey;
-    }
-    
-    public SecretKey generateIV() throws NoSuchAlgorithmException {
-		long timestamp = System.currentTimeMillis()*1000;
-		SecureRandom random = new SecureRandom();
-		random.setSeed(timestamp);
-		
-		KeyGenerator kgen = KeyGenerator.getInstance("AES");
-		kgen.init(128, random); // 128 bits key size
-		return kgen.generateKey();
-	}
-	
-	public SecretKey generateKey(String seed) throws NoSuchAlgorithmException {
-		SecureRandom random = new SecureRandom();
-		random.setSeed(convertSeed(seed));
-		
-		KeyGenerator kgen = KeyGenerator.getInstance("AES");
-		kgen.init(128, random); // 128 bits key size
-		return kgen.generateKey();
-	}
-	
-	private long convertSeed(String strSeed) {
-		long seed = 0;
-	    for (int i = 0; i < strSeed.length(); i++) {
-	        char ch = strSeed.charAt(i);               
-	        seed = seed + (long)ch;
-	    }
-	    return seed;
-	}
-	
-	public void writeKeyToFile(SecretKey key, String filename) throws IOException {
-		FileOutputStream fos = new FileOutputStream(new File(filename));
-		ObjectOutputStream out = new ObjectOutputStream(fos);
-		try {
-			out.writeObject(key);
-		} finally {
-			out.close();
+			iv = aes.readKeyFromFile("iv.dat");
+			
+			inputFile = new File(filename);
+			aes.encrypt(key, iv, inputFile, new File(filename+".dat"));
+			System.out.println("[SUCCESS]Your file has been encrypted.");
+			inputFile.delete();
+			break;
+		case "decrypt":
+			System.out.println("Key to decrypt: "); 
+			key = aes.generateKey(scan.next());
+			System.out.println("Filename to decrypt: "); 
+			filename = scan.next();
+			
+			iv = aes.readKeyFromFile("iv.dat");
+			
+			inputFile = new File(filename);
+			aes.decrypt(key, iv, new File(filename), new File(filename.replace(".dat", "")));
+			System.out.println("[SUCCESS]Your file has been decrypted.");
+			inputFile.delete();
+			break;
+		case "encryptfolder":
+			System.out.println("Key to encrypt: "); 
+			key = aes.generateKey(scan.next());
+			System.out.println("Path to folder to encrypt all files: "); 
+			path = scan.next();
+			
+			iv = aes.readKeyFromFile("iv.dat");
+			
+			encryptFiles(path, key, iv, aes);
+			break;
+		case "decryptfolder":
+			System.out.println("Key to decrypt: "); 
+			key = aes.generateKey(scan.next());
+			System.out.println("Path to folder to decrypt all files: "); 
+			path = scan.next();
+			
+			iv = aes.readKeyFromFile("iv.dat");
+			
+			decryptFiles(path, key, iv, aes);
+			break;
+		default:
+			System.err.println("[ERROR] Wrong Syntex.");
+			break;
 		}
 	}
 	
-	public SecretKey readKeyFromFile(String filename) throws IOException {
-		FileInputStream fis = new FileInputStream(new File(filename));
-		Key key = null;
-		ObjectInputStream oin = new ObjectInputStream(fis);
+	public void encryptFiles(String dirPath, SecretKey key, SecretKey iv, AES aes) {
+		//File[] listOfFiles = getFilesInDirectory(dirPath);
+		DirectoriesCrawler crawler = new DirectoriesCrawler(dirPath);
+		crawler.scanDirectories();
+		File[] listOfFiles = crawler.getAllFiles();
+		
+		for (int i = 0; i < listOfFiles.length; i++) {
+			File inputFile = listOfFiles[i];
+			
+			System.out.println(inputFile);
+			aes.encrypt(key, iv, inputFile, new File(inputFile.getPath()+".dat"));
+			inputFile.delete();
+		}
+	}
+	
+	public void decryptFiles(String dirPath, SecretKey key, SecretKey iv, AES aes) {
+		//File[] listOfFiles = getFilesInDirectory(dirPath);
+		DirectoriesCrawler crawler = new DirectoriesCrawler(dirPath);
+		crawler.scanDirectories();
+		File[] listOfFiles = crawler.getAllFiles();
+		
+		for (int i = 0; i < listOfFiles.length; i++) {
+			File inputFile = listOfFiles[i];
+			aes.decrypt(key, iv, inputFile, new File(inputFile.getPath().replace(".dat", "")));
+			if (aes.isDecryptionKeyBad() == true) 
+				return;
+			inputFile.delete();
+		}
+	}
+	
+	private class DirectoriesCrawler {
+		private List<File> listFiles = new ArrayList<File>();
+		private List<File> listDirs = new ArrayList<File>();
+		private File baseDir = null;
+		
+		private File[] listOfFiles;
+		
+		public DirectoriesCrawler(String dirPath) {
+			baseDir = new File(dirPath);
+		}
+		
+		public void scanDirectories() {
+			scanBaseDirectory();
+			scanAllSubDirectories();
+			listOfFiles = new File[listFiles.size()];
+			convertListToArray();
+		}
+		
+		private void scanBaseDirectory() {
+			for (int i=0; i<baseDir.listFiles().length; i++) {
+				if (baseDir.listFiles()[i].isFile()) {
+					listFiles.add(baseDir.listFiles()[i]);
+				} else if (baseDir.listFiles()[i].isDirectory()) {
+					listDirs.add(baseDir.listFiles()[i]);
+				}
+			}
+		}
+		
+		private void scanAllSubDirectories() {
+			for (int i=0; i<listDirs.size(); i++) {
+				File[] dir = listDirs.get(i).listFiles();
+				for (int j=0; j<dir.length; j++) {
+					if (dir[j].isFile()) {
+						listFiles.add(dir[j]);
+					} else if (dir[j].isDirectory()) {
+						listDirs.add(dir[j]);
+					}
+				}
+			}
+		}
+		
+		private void convertListToArray() {
+			for (int i=0; i<listFiles.size(); i++) { 
+				listOfFiles[i] = listFiles.get(i);
+			}
+		}
+		
+		public File[] getAllFiles() {
+			return listOfFiles;
+		}
+	}
+	
+	
+	public static void main(String[] args) {
 		try {
-		  key = (Key) oin.readObject();
-		} catch (ClassNotFoundException e) {
+			new Main();
+		} catch (NoSuchAlgorithmException | IOException e) {
 			e.printStackTrace();
-		} finally {
-		  oin.close();
 		}
-		SecretKey sKey = new SecretKeySpec(key.getEncoded(), 0, key.getEncoded().length, "AES");
-		return sKey;
 	}
 	
 }
