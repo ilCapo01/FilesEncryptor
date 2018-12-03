@@ -7,7 +7,9 @@ import java.util.Scanner;
 
 import javax.crypto.SecretKey;
 
-//https://www.codejava.net/coding/file-encryption-and-decryption-simple-example
+/*
+ * @author Bar771.
+ */
 public class Main {
 	
 	public Main() throws NoSuchAlgorithmException, IOException {
