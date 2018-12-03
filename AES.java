@@ -22,6 +22,9 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+/*
+ * @author Bar771.
+ */
 public class AES {
     private boolean badDecryptionKey = false;
 	
