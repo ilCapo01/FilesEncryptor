@@ -8,7 +8,7 @@ import java.util.Scanner;
 import javax.crypto.SecretKey;
 
 /*
- * Coded By Bar771.
+ * @author Bar771.
  */
 public class Main {
 	
