@@ -54,6 +54,7 @@ public class AES {
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IOException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e) {
 			//e.printStackTrace();
 			System.err.print("A bad key is used during decryption");
+			return;
 		}
     }
     
