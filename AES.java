@@ -23,7 +23,12 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class AES {
-  
+	
+	private static final String ALGORITHM = "AES";
+    private static final String TRANSFORMATION = "AES/CBC/PKCS5PADDING";
+    
+    public boolean badDecryptionKey = false;
+	
 	public void encrypt(SecretKey key, SecretKey initVector, File inputFile, File outputFile) {
         doCrypto(Cipher.ENCRYPT_MODE, key, initVector, inputFile, outputFile);
     }
@@ -35,8 +40,8 @@ public class AES {
     private void doCrypto(int cipherMode, SecretKey key, SecretKey initVector, File inputFile, File outputFile) {
         try {
         	IvParameterSpec iv = new IvParameterSpec(initVector.getEncoded());
-        	Key secretKey = new SecretKeySpec(key.getEncoded(), "AES");
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+        	Key secretKey = new SecretKeySpec(key.getEncoded(), ALGORITHM);
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
             
 			cipher.init(cipherMode, secretKey, iv);
 			
@@ -54,7 +59,7 @@ public class AES {
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IOException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e) {
 			//e.printStackTrace();
 			System.err.print("A bad key is used during decryption");
-			return;
+			badDecryptionKey = true;
 		}
     }
     
