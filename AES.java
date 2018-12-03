@@ -23,10 +23,6 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class AES {
-	
-	private static final String ALGORITHM = "AES";
-    private static final String TRANSFORMATION = "AES/CBC/PKCS5PADDING";
-    
     public boolean badDecryptionKey = false;
 	
 	public void encrypt(SecretKey key, SecretKey initVector, File inputFile, File outputFile) {
@@ -40,8 +36,8 @@ public class AES {
     private void doCrypto(int cipherMode, SecretKey key, SecretKey initVector, File inputFile, File outputFile) {
         try {
         	IvParameterSpec iv = new IvParameterSpec(initVector.getEncoded());
-        	Key secretKey = new SecretKeySpec(key.getEncoded(), ALGORITHM);
-            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        	Key secretKey = new SecretKeySpec(key.getEncoded(), "AES");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
             
 			cipher.init(cipherMode, secretKey, iv);
 			
